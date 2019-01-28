@@ -7,7 +7,7 @@ constraints from a table to prepare it for
 a clustered columnstore index. Wholly 
 useless for any version of SQL other than
 2014
-
+   
 *****************************************/
 
 
