@@ -28,7 +28,7 @@ SELECT @Code += '
 /*
 If the columnstore needs to be partitioned, this line will be required:
 SELECT @Code += '
-' + COALESCE('CREATE CLUSTERED INDEX CI_' + @SCHEMA_NAME + '_' + @NAME + ' ON ' + @SCHEMA_NAME + '.' + @NAME + '(TradingDateKey) ON $(partition_scheme) ($(partition_columns));', '')
+' + COALESCE('CREATE CLUSTERED INDEX CI_' + @SCHEMA_NAME + '_' + @NAME + ' ON ' + @SCHEMA_NAME + '.' + @NAME + '($(partition_columns)) ON $(partition_scheme) ($(partition_columns));', '')
 */
 
 SELECT @Code += '
