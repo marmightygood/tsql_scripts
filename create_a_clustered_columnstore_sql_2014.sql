@@ -38,4 +38,4 @@ SELECT @Code += '
 SELECT @Code += '
 ' + COALESCE('CREATE CLUSTERED COLUMNSTORE INDEX CI_' + @SCHEMA_NAME + '_' + @NAME + ' ON ' + @SCHEMA_NAME + '.' + @NAME + ' WITH (DROP_Existing=ON) --ON $(partition_scheme)($(partition_columns)) ', '')
 
-PRINT @Code
+PRINT @Code 
