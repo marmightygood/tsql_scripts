@@ -14,8 +14,8 @@ useless for any version of SQL other than
 
 DECLARE @SCHEMA_NAME SYSNAME = '<schema_name,varchar,dbo>';
 DECLARE @NAME SYSNAME = '<table_name,varchar,my_table>)';
-DECLARE @PartitionScheme = '<partition_scheme,varchar,PS_PartitionScheme>'
-DECLARE @PartitioningColumns =  '<partition_columns,varchar,Id>'
+DECLARE @PartitionScheme SYSNAME = '<partition_scheme,varchar,PS_PartitionScheme>'
+DECLARE @PartitioningColumns SYSNAME =  '<partition_columns,varchar,Id>'
 DECLARE @Code NVARCHAR(MAX) = ''
 
 SELECT @Code += '
