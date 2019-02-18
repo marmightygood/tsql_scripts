@@ -5,7 +5,8 @@ SELECT
 	i.name IndexName,
 	p.partition_number PartitionNumber,
 	p.rows PartitionRowCount,
-	ps.name PartitionSchemeName
+	ps.name PartitionSchemeName,
+	ds.name DataSpaceName
 FROM 
 	sys.tables t
 	LEFT JOIN sys.indexes i 
@@ -18,9 +19,10 @@ FROM
 		ON t.schema_id = s.schema_id
 	LEFT JOIN sys.partition_schemes ps 
 		ON i.data_space_id = ps.data_space_id
+	INNER JOIN sys.data_spaces ds 
+		ON i.data_space_id = ds.data_space_id
 WHERE 
-	t.NAME NOT LIKE 'dt%'
-	AND t.is_ms_shipped = 0
+	t.is_ms_shipped = 0
 	AND i.OBJECT_ID > 255
 ORDER BY 
 	s.name,
