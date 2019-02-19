@@ -1,0 +1,67 @@
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+
+--Assumes a bunch of things, including:
+--1) table has a primary key across dimension keys, and that primary key is named PK_SchemaName_TableName
+--2) You want to partition the columnstore on a date key, using a Partition Scheme as named below
+
+DECLARE @PartitionSchemeName SYSNAME = 'PS_TradingDateKey_Buckets'
+
+--Measure the size of the tables and partitions in a schema
+SELECT s.name SchemaName,
+	t.name TableName,
+	i.name IndexName,
+	p.partition_number PartitionNumber,
+	p.rows PartitionRowCount,
+	ps.name PartitionSchemeName,
+	ds.name DataSpaceName,
+	(
+		SELECT STUFF((
+					SELECT ',' + columns.name
+					FROM sys.index_columns
+					INNER JOIN sys.columns ON index_columns.index_column_id = columns.column_id
+					INNER JOIN sys.indexes ON index_columns.index_id = indexes.index_id
+					WHERE indexes.index_id = i.index_id
+						AND indexes.object_id = i.object_id
+					ORDER BY index_columns.key_ordinal
+					FOR XML PATH('')
+					), 1, 1, '')
+		) PK_Cols,
+	'CREATE UNIQUE CLUSTERED INDEX ' + i.name + ' ON ' + s.name + '.' + t.name + '(
+	
+	
+	' + (
+		SELECT STUFF((
+					SELECT ',' + columns.name
+					FROM sys.index_columns
+					INNER JOIN sys.columns ON index_columns.index_column_id = columns.column_id
+					INNER JOIN sys.indexes ON index_columns.index_id = indexes.index_id
+					WHERE indexes.index_id = i.index_id
+						AND indexes.object_id = i.object_id
+					ORDER BY index_columns.key_ordinal
+					FOR XML PATH('')
+					), 1, 1, '')
+		) + '
+	
+	) WITH (DROP_EXISTING=ON) ON ' + @PartitionSchemeName +' (' + (
+		SELECT TOP 1 columns.name
+		FROM sys.index_columns
+		INNER JOIN sys.columns ON index_columns.index_column_id = columns.column_id
+		INNER JOIN sys.indexes ON index_columns.index_id = indexes.index_id
+		WHERE indexes.index_id = i.index_id
+			AND indexes.object_id = i.object_id
+			AND columns.name LIKE '%date%key'
+		) + ')' AS IndexDefinition
+FROM sys.tables t
+LEFT JOIN sys.indexes i ON t.OBJECT_ID = i.object_id
+--AND i.name =   'pk_'+ s.name+ '_' + t.name
+INNER JOIN sys.partitions p ON i.object_id = p.OBJECT_ID
+	AND i.index_id = p.index_id
+LEFT JOIN sys.schemas s ON t.schema_id = s.schema_id
+LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
+INNER JOIN sys.data_spaces ds ON i.data_space_id = ds.data_space_id
+WHERE t.is_ms_shipped = 0
+	AND i.OBJECT_ID > 255
+	AND t.name LIKE 'Fact%'
+	AND i.name LIKE 'PK%'
+ORDER BY s.name,
+	t.name
