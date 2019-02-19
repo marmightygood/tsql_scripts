@@ -1,4 +1,3 @@
-
 DECLARE @Success BIT = 0;
 DECLARE @Attempt INT = 1;
 DECLARE @MaxAttempts INT = 10;
@@ -7,7 +6,8 @@ WHILE @Success = 0 BEGIN
 
 	BEGIN TRY
 
-	    --Script to re-run goes here
+	    --Replace this with a script that might eventually work
+	    SELECT 1 / 0
 
 	    SET @Success = 1;
 	END TRY
@@ -18,6 +18,7 @@ WHILE @Success = 0 BEGIN
 		SET @Success = 0;
 	END CATCH
 	IF @Attempt > @MaxAttempts BEGIN
+		RAISERROR ('Exceeded max attempts (%i)', 16, 1, @MaxAttempts)
 		BREAK
 	END
 END
