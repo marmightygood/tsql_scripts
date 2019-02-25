@@ -8,7 +8,11 @@ SELECT
 	p.partition_number PartitionNumber,
 	p.rows PartitionRowCount,
 	ps.name PartitionSchemeName,
-	ds.name DataSpaceName
+	ds.name DataSpaceName,
+	stats.user_seeks, 
+	stats.user_scans, 
+	stats.user_lookups, 
+	stats.user_updates 
 FROM 
 	sys.tables t
 	LEFT JOIN sys.indexes i 
@@ -23,6 +27,10 @@ FROM
 		ON i.data_space_id = ps.data_space_id
 	INNER JOIN sys.data_spaces ds 
 		ON i.data_space_id = ds.data_space_id
+	--when used for analysing indexes, this can be useful too:
+	INNER JOIN sys.dm_db_index_usage_stats stats
+		ON t.object_id = stats.object_id
+		AND i.index_id = stats.index_id
 WHERE 
 	t.is_ms_shipped = 0
 	AND i.OBJECT_ID > 255
