@@ -1,3 +1,5 @@
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+
 --Measure the size of the tables and partitions in a schema
 SELECT 
 	s.name SchemaName,
