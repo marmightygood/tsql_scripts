@@ -8,29 +8,32 @@ Procedure generates a single row of test data for a table and inserts it.
 Run like this: EXEC #INSERTESTDATA 'dbo.Customer'
 
 */
-
-
-CREATE PROCEDURE #INSERTESTDATA
-	@FullTableName NVARCHAR(MAX)
+CREATE PROCEDURE #INSERTESTDATA @FullTableName NVARCHAR(MAX)
 AS
 BEGIN
-	DECLARE 
-		@TableName SYSNAME,
+	DECLARE @TableName SYSNAME,
 		@SchemaName SYSNAME,
 		@LoremIpsum NVARCHAR(MAX),
 		@Columns NVARCHAR(2000) = '',
 		@Values NVARCHAR(MAX) = '',
 		@Statement NVARCHAR(MAX);
 
-	SET @SchemaName = LEFT(@FullTableName, CHARINDEX('.',@FullTableName) - 1)
-	SET @TableName = SUBSTRING(@FullTableName, CHARINDEX('.',@FullTableName) + 1, 9999)
+	SET @SchemaName = LEFT(@FullTableName, CHARINDEX('.', @FullTableName) - 1)
+	SET @TableName = SUBSTRING(@FullTableName, CHARINDEX('.', @FullTableName) + 1, 9999)
 
-	IF OBJECT_ID (@SchemaName + '.' + @TableName) IS NULL BEGIN
-		RAISERROR('Target table does not exist', 16, 1)
+	IF OBJECT_ID(@SchemaName + '.' + @TableName) IS NULL
+	BEGIN
+		RAISERROR (
+				'Target table does not exist',
+				16,
+				1
+				)
+
 		RETURN
 	END
 
-	SET @LoremIpsum = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ut dui maximus, gravida massa vitae, imperdiet nunc. Curabitur vel augue gravida, ultricies urna nec, congue nulla. Nunc mollis lacinia sollicitudin. Fusce condimentum, elit eget sollicitudin rutrum, eros sem posuere orci, ac ullamcorper leo lacus id lorem. Suspendisse magna nisl, cursus sollicitudin ante ac, vehicula imperdiet mi. Fusce gravida et lectus eu porta. Nam tincidunt urna at lorem viverra pellentesque ac at est. Sed nec metus in tellus cursus tincidunt. Pellentesque placerat placerat justo, vulputate placerat velit euismod in. Maecenas viverra enim at fermentum luctus. Integer vel maximus orci, eu pellentesque magna. Nam quis tristique neque. Quisque feugiat augue nulla, et tristique urna dignissim vel. Praesent interdum sem ac purus fringilla, sit amet vulputate quam vestibulum.
+	SET @LoremIpsum = 
+		'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ut dui maximus, gravida massa vitae, imperdiet nunc. Curabitur vel augue gravida, ultricies urna nec, congue nulla. Nunc mollis lacinia sollicitudin. Fusce condimentum, elit eget sollicitudin rutrum, eros sem posuere orci, ac ullamcorper leo lacus id lorem. Suspendisse magna nisl, cursus sollicitudin ante ac, vehicula imperdiet mi. Fusce gravida et lectus eu porta. Nam tincidunt urna at lorem viverra pellentesque ac at est. Sed nec metus in tellus cursus tincidunt. Pellentesque placerat placerat justo, vulputate placerat velit euismod in. Maecenas viverra enim at fermentum luctus. Integer vel maximus orci, eu pellentesque magna. Nam quis tristique neque. Quisque feugiat augue nulla, et tristique urna dignissim vel. Praesent interdum sem ac purus fringilla, sit amet vulputate quam vestibulum.
 
 	Curabitur aliquet dui massa, eget finibus risus bibendum ut. Vestibulum ac sapien leo. Donec ut est a dolor tincidunt faucibus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam tincidunt a neque sit amet sagittis. Mauris lectus ligula, fermentum at faucibus eget, maximus nec metus. Integer orci felis, vulputate sit amet porta id, dignissim non metus. Morbi aliquet semper bibendum. Maecenas at erat neque. Morbi metus arcu, congue quis dolor quis, venenatis pharetra odio. Sed vitae ligula erat. Nullam elit velit, gravida vitae tristique vel, dapibus et nunc. Vivamus ac odio a lorem sollicitudin consequat eu et ipsum. Duis ex sem, vehicula laoreet mauris id, elementum blandit ex. Integer sed convallis ex. In facilisis massa id sem euismod, nec commodo odio tincidunt.
 	Duis at volutpat nulla. Duis in ligula id nunc malesuada fermentum. Proin imperdiet congue quam, at sagittis mauris. Fusce convallis nisl id volutpat sollicitudin. Proin vulputate laoreet ligula, sed venenatis est dictum quis. Phasellus tincidunt nulla auctor scelerisque aliquam. Etiam id convallis purus.
@@ -44,41 +47,44 @@ BEGIN
 	Phasellus consequat convallis condimentum. Cras sed gravida neque. Maecenas blandit ante eget ipsum viverra porta. Phasellus enim dolor, auctor semper velit et, tristique suscipit elit. Integer vulputate semper nisi nec pulvinar. Maecenas semper, odio eu malesuada egestas, nulla metus porta orci, in euismod eros metus sed enim. Etiam a luctus nunc.
 	Sed vulputate urna diam, eget semper augue tincidunt et. Quisque auctor lobortis eros, suscipit semper felis malesuada eget. Duis vel pellentesque velit. Nam iaculis, felis sed dapibus hendrerit, orci risus aliquet nunc.'
 
-	select 
-		@Columns =  name + N',' + @Columns
-	from
-		sys.columns
-	where
-		OBJECT_ID = OBJECT_ID(@SchemaName + '.'+ @TableName)
+	SELECT @Columns = name + N',' + @Columns
+	FROM sys.columns
+	WHERE OBJECT_ID = OBJECT_ID(@SchemaName + '.' + @TableName)
 		AND generated_always_type = 0
 		AND is_identity = 0
-	order by columns.column_id ASC
+	ORDER BY columns.column_id ASC
 
-	select 
-		@Values = 
-		CASE
-			WHEN types.name IN ('VARCHAR', 'NVARCHAR') THEN '''' + CAST(SUBSTRING(@LoremIpsum, CAST(RAND(columns.column_id) * columns.max_length / 4  AS INTEGER), CAST(RAND(columns.column_id) * columns.max_length / 2 AS INTEGER)) AS VARCHAR(MAX)) + ''''
-			WHEN types.name = 'INTEGER' THEN CAST(CAST(RAND(columns.column_id) * 1000 AS INTEGER) AS VARCHAR(MAX))
-			WHEN types.name = 'NUMERIC' THEN CAST(CAST(RAND(columns.column_id) * 1000 AS NUMERIC) AS VARCHAR(MAX))
-			WHEN types.name = 'DECIMAL' THEN CAST(CAST(RAND(columns.column_id) * 1000 AS DECIMAL(5, 2)) AS VARCHAR(MAX))
-
-			WHEN types.name = 'money' THEN CAST(CAST(RAND(columns.column_id) * 1000 AS DECIMAL(5, 2)) AS VARCHAR(MAX))
-
-			WHEN types.name = 'UNIQUEIDENTIFIER' THEN '''' +  CAST(NEWID() AS VARCHAR(1024)) + ''''
-			WHEN Types.name IN ('DATE', 'DATETIME', 'DATETIME2') THEN '''' + FORMAT(GETDATE(), 'yyyy-MM-dd hh:mm') + ''''
+	SELECT @Values = CASE 
+			WHEN types.name IN (
+					'VARCHAR',
+					'NVARCHAR'
+					)
+				THEN '''' + CAST(SUBSTRING(@LoremIpsum, CAST(RAND(columns.column_id) * columns.max_length / 4 AS INT), CAST(RAND(columns.column_id) * columns.max_length / 2 AS INT)) AS VARCHAR(MAX)) + ''''
+			WHEN types.name = 'INTEGER'
+				THEN CAST(CAST(RAND(columns.column_id) * 1000 AS INT) AS VARCHAR(MAX))
+			WHEN types.name = 'NUMERIC'
+				THEN CAST(CAST(RAND(columns.column_id) * 1000 AS NUMERIC) AS VARCHAR(MAX))
+			WHEN types.name = 'DECIMAL'
+				THEN CAST(CAST(RAND(columns.column_id) * 1000 AS DECIMAL(5, 2)) AS VARCHAR(MAX))
+			WHEN types.name = 'money'
+				THEN CAST(CAST(RAND(columns.column_id) * 1000 AS DECIMAL(5, 2)) AS VARCHAR(MAX))
+			WHEN types.name = 'UNIQUEIDENTIFIER'
+				THEN '''' + CAST(NEWID() AS VARCHAR(1024)) + ''''
+			WHEN Types.name IN (
+					'DATE',
+					'DATETIME',
+					'DATETIME2'
+					)
+				THEN '''' + FORMAT(GETDATE(), 'yyyy-MM-dd hh:mm') + ''''
 			ELSE ''''''
-		END
-		+ N',' + @Values
-	from
-		sys.columns
-		inner join sys.types
-		on columns.user_type_id = types.user_type_id
-	where
-		OBJECT_ID = OBJECT_ID(@SchemaName + '.'+ @TableName)
+			END + N',' + @Values
+	FROM sys.columns
+	INNER JOIN sys.types
+		ON columns.user_type_id = types.user_type_id
+	WHERE OBJECT_ID = OBJECT_ID(@SchemaName + '.' + @TableName)
 		AND generated_always_type = 0
 		AND is_identity = 0
-	order by columns.column_id ASC
-
+	ORDER BY columns.column_id ASC
 
 	SET @Statement = '
 	INSERT INTO  ' + QUOTENAME(@SchemaName) + '. ' + QUOTENAME(@TableName) + ' (
@@ -86,14 +92,13 @@ BEGIN
 	)
 	VALUES (
 	' + LEFT(@Values, LEN(@Values) - 1) + '
-	)'
-	;
+	)';
+
 	SELECT CAST(@Statement AS XML)
+
 	PRINT @Statement
 
-
 	EXEC SP_EXECUTESQL @Statement
-
 END
 GO
 
